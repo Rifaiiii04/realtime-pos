@@ -25,6 +25,7 @@ export default async function OrderManagementPage({
         src={`${environment.NEXT_PUBLIC_MIDTRANS_API_URL}/snap/snap.js`}
         data-client-key={environment.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
         strategy="lazyOnload"
+        unsfafe-inline
       />
       <DetailOrder id={id} />
     </div>
