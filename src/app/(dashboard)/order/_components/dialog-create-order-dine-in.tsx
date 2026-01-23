@@ -78,7 +78,7 @@ export default function DialogCreateOrderDineIn({
   }, [createOrderState]);
 
   return (
-    <DialogContent className="sm:max-w-[425px] max-h-[90vh]">
+    <DialogContent className="sm:max-w-106.25 max-h-[90vh]">
       <Form {...form}>
         <DialogHeader>
           <DialogTitle>Create Order Dine In</DialogTitle>

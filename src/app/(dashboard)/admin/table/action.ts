@@ -79,6 +79,8 @@ export async function updateTable(
       description: validatedFields.data.description,
       capacity: validatedFields.data.capacity,
       status: validatedFields.data.status,
+      position_x: 0,
+      position_y: 0,
     })
     .eq("id", formData.get("id"));
 
@@ -97,7 +99,10 @@ export async function updateTable(
   };
 }
 
-export async function deleteTable(prevState: TableFormState, formData: FormData) {
+export async function deleteTable(
+  prevState: TableFormState,
+  formData: FormData,
+) {
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -114,7 +119,6 @@ export async function deleteTable(prevState: TableFormState, formData: FormData)
       },
     };
   }
-  return {
-    status: "success",
-  };
+
+  return { status: "success" };
 }
