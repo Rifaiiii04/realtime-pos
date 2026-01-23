@@ -177,7 +177,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardDescription>Growth Rate</CardDescription>
             <CardTitle className="text-3xl font-bold">
-              {revenue?.growthRate ?? 0}%
+              {revenue?.growthRate ?? "N/A"}%
             </CardTitle>
           </CardHeader>
           <CardFooter>
