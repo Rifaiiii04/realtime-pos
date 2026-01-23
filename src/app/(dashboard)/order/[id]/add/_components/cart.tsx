@@ -3,20 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
 import useDebounce from "@/hooks/use-debounce";
 import { convertIDR } from "@/lib/utils";
 import { Cart } from "@/types/order";
 import { Menu } from "@/validations/menu-validation";
-import Image from "next/image";
-import {
-  Dispatch,
-  SetStateAction,
-  startTransition,
-  useActionState,
-} from "react";
-import { addOrderItem } from "../../../action";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Dispatch, SetStateAction } from "react";
 
 export default function CartSection({
   order,
@@ -41,12 +34,12 @@ export default function CartSection({
   onOrder: () => void;
 }) {
   const debounce = useDebounce();
+
   const handleAddNote = (id: string, notes: string) => {
     setCarts(
       carts.map((item) => (item.menu_id === id ? { ...item, notes } : item)),
     );
   };
-
   return (
     <Card className="w-full shadow-sm">
       <CardContent className="space-y-4">
@@ -55,14 +48,16 @@ export default function CartSection({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Name</Label>
-              <Input value={order?.customer_name} readOnly />
+              <Input value={order?.customer_name} disabled />
             </div>
             <div className="space-y-2">
               <Label>Table</Label>
               <Input
-                value={(order?.tables as unknown as { name: string }).name}
+                value={
+                  (order?.tables as unknown as { name: string })?.name ||
+                  "Takeaway"
+                }
                 disabled
-                readOnly
               />
             </div>
           </div>
@@ -71,16 +66,16 @@ export default function CartSection({
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Cart</h3>
           {carts.length > 0 ? (
-            carts.map((item: Cart) => (
-              <div key={item.menu.id} className="space-y-2 ">
-                <div className="flex justify-between  items-center">
-                  <div className="flex items-center gap-2 ">
+            carts?.map((item: Cart) => (
+              <div key={item.menu.id} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
                     <Image
                       src={item.menu.image_url as string}
                       alt={item.menu.name}
-                      className="rounded"
                       width={30}
                       height={30}
+                      className="rounded"
                     />
                     <div>
                       <p className="text-sm">{item.menu.name}</p>
@@ -91,7 +86,7 @@ export default function CartSection({
                   </div>
                   <p className="text-sm">{convertIDR(item.total)}</p>
                 </div>
-                <div className="flex items-center gap-4 w-full ">
+                <div className="flex items-center gap-4 w-full">
                   <Input
                     placeholder="Add Note"
                     className="w-full"

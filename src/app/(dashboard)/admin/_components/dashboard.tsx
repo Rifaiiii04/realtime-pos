@@ -20,17 +20,10 @@ export default function Dashboard() {
   lastWeek.setDate(lastWeek.getDate() - 6);
   lastWeek.setHours(0, 0, 0, 0);
 
-  const formatDate = (date: Date) =>
-    new Intl.DateTimeFormat("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
-
-  const { data: orders, refetch: refetchOrders } = useQuery({
+  const { data: orders } = useQuery({
     queryKey: ["orders-per-day"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("orders")
         .select("created_at")
         .eq("status", "settled")
@@ -86,14 +79,11 @@ export default function Dashboard() {
         0,
       );
 
-      let growthRate: number | null = null;
-
-      if (totalRevenueLastMonth > 0) {
-        growthRate =
-          ((totalRevenueThisMonth - totalRevenueLastMonth) /
-            totalRevenueLastMonth) *
-          100;
-      }
+      const growthRate = (
+        ((totalRevenueThisMonth - totalRevenueLastMonth) /
+          totalRevenueLastMonth) *
+        100
+      ).toFixed(2);
 
       const daysInData = new Set(
         (dataThisMonth ?? []).map((item) =>
@@ -114,7 +104,7 @@ export default function Dashboard() {
   });
 
   const { data: totalOrder } = useQuery({
-    queryKey: ["total_order"],
+    queryKey: ["total-order"],
     queryFn: async () => {
       const { count } = await supabase
         .from("orders")
@@ -127,27 +117,25 @@ export default function Dashboard() {
   });
 
   const { data: lastOrder } = useQuery({
-    queryKey: ["last_order"],
+    queryKey: ["last-order"],
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id, order_id, customer_name, status, tables (name, id)")
+        .select("id, order_id, customer_name, status, tables(name, id)")
         .eq("status", "process")
-        .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(5)
+        .order("created_at", { ascending: false });
 
       return data;
     },
   });
-
-  const hasActiveOrders = !!lastOrder?.length;
 
   return (
     <div className="w-full">
       <div className="flex flex-col lg:flex-row mb-4 gap-2 justify-between w-full">
         <h1 className="text-2xl font-bold">Dashboard</h1>
       </div>
-      <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <Card>
           <CardHeader>
             <CardDescription>Total Revenue</CardDescription>
@@ -157,7 +145,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardFooter>
             <div className="text-muted-foreground text-sm">
-              Revenue This Month
+              *Revenue this month
             </div>
           </CardFooter>
         </Card>
@@ -169,7 +157,9 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardFooter>
-            <div className="text-muted-foreground text-sm">Average Per day</div>
+            <div className="text-muted-foreground text-sm">
+              *Average per day
+            </div>
           </CardFooter>
         </Card>
         <Card>
@@ -189,9 +179,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardDescription>Growth Rate</CardDescription>
             <CardTitle className="text-3xl font-bold">
-              {revenue?.growthRate === null
-                ? "N/A"
-                : `${revenue?.growthRate.toFixed(2)}%`}
+              {revenue?.growthRate ?? 0}%
             </CardTitle>
           </CardHeader>
           <CardFooter>
@@ -206,37 +194,37 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Order Create Per Week</CardTitle>
             <CardDescription>
-              Showing orders from {formatDate(lastWeek)} to{" "}
-              {formatDate(new Date())}
+              Showing orders from {lastWeek.toLocaleDateString()} to{" "}
+              {new Date().toLocaleDateString()}
             </CardDescription>
           </CardHeader>
           <div className="w-full h-64 p-6">
             <LineCharts data={orders} />
           </div>
         </Card>
-        <Card className="w-full lg:w-2/3">
+        <Card className="w-full lg:w-1/3">
           <CardHeader>
             <CardTitle>Active Order</CardTitle>
-            <CardDescription>Showing last 5 Active Order</CardDescription>
+            <CardDescription>Showing last 5 active orders</CardDescription>
           </CardHeader>
-          <div className=" px-6">
-            {hasActiveOrders ? (
-              lastOrder!.map((order) => (
+          <div className="px-6">
+            {lastOrder ? (
+              lastOrder.map((order) => (
                 <div
-                  key={order.id}
+                  key={order?.id}
                   className="flex items-center gap-4 justify-between mb-4"
                 >
                   <div>
-                    <h3 className="font-semibold">{order.customer_name}</h3>
+                    <h3 className="font-semibold">{order?.customer_name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Table :
-                      {(order.tables as unknown as { name: string }).name}
+                      Table:{" "}
+                      {(order?.tables as unknown as { name: string })?.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Order ID : {order.id}
+                      Order ID: {order?.id}
                     </p>
                   </div>
-                  <Link href={`/order/${order.order_id}`}>
+                  <Link href={`/order/${order?.order_id}`}>
                     <Button className="mt-2" size="sm">
                       Detail
                     </Button>
@@ -244,7 +232,7 @@ export default function Dashboard() {
                 </div>
               ))
             ) : (
-              <p>No Active Orders</p>
+              <p>No active orders</p>
             )}
           </div>
         </Card>

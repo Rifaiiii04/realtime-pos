@@ -5,14 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import path from "path";
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Success() {
   const supabase = createClient();
-  const searchParams = useSearchParams();
-  const order_id = searchParams.get("order_id");
+  const seacrhParams = useSearchParams();
+  const order_id = seacrhParams.get("order_id");
 
   const { mutate } = useMutation({
     mutationKey: ["mutateUpdateStatusOrder"],
@@ -26,7 +25,7 @@ export default function Success() {
         .select()
         .single();
 
-      if (data) {
+      if (data && data.table_id) {
         await supabase
           .from("tables")
           .update({
@@ -40,9 +39,10 @@ export default function Success() {
   useEffect(() => {
     mutate();
   }, [order_id]);
+
   return (
     <div className="w-full flex flex-col justify-center items-center gap-4">
-      <CheckCircle className="size-15 mt-3 ml-3 text-green-400 animate-bounce" />
+      <CheckCircle className="size-15 text-green-400" />
       <h1 className="text-2xl font-bold">Payment Success</h1>
       <Link href="/order">
         <Button>Back To Order</Button>

@@ -31,7 +31,6 @@ export default function Summary({
 }) {
   const { grandTotal, totalPrice, tax, service } = usePricing(orderMenu);
   const profile = useAuthStore((state) => state.profile);
-
   const isAllServed = useMemo(() => {
     return orderMenu?.every((item) => item.status === "served");
   }, [orderMenu]);
@@ -58,27 +57,29 @@ export default function Summary({
         description: generatePaymentState.errors?._form?.[0],
       });
     }
+
     if (generatePaymentState?.status === "success") {
       window.snap.pay(generatePaymentState.data.payment_token);
     }
   }, [generatePaymentState]);
-
   return (
-    <Card className="w-full shadow-sm ">
+    <Card className="w-full shadow-sm">
       <CardContent className="space-y-4">
         <h3 className="text-lg font-semibold">Customer Information</h3>
         {order && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Name</Label>
-              <Input value={order?.customer_name} readOnly />
+              <Input value={order?.customer_name} disabled />
             </div>
             <div className="space-y-2">
               <Label>Table</Label>
               <Input
-                value={(order?.tables as unknown as { name: string }).name}
+                value={
+                  (order?.tables as unknown as { name: string })?.name ||
+                  "Takeaway"
+                }
                 disabled
-                readOnly
               />
             </div>
           </div>
@@ -103,12 +104,16 @@ export default function Summary({
             <p className="text-lg font-semibold">Total</p>
             <p className="text-lg font-semibold">{convertIDR(grandTotal)}</p>
           </div>
-          {order?.status === "process" && profile.role !== 'kitchen' &&  (
+          {order?.status === "process" && profile.role !== "kitchen" && (
             <Button
               type="submit"
               onClick={handleGeneratePayment}
-              disabled={!isAllServed || isPendingGeneratePayment}
-              className="w-full font-semibold bg-teal-500 hover:bg-teal-700 text-white cursor-pointer"
+              disabled={
+                !isAllServed ||
+                isPendingGeneratePayment ||
+                orderMenu?.length === 0
+              }
+              className="w-full font-semibold bg-teal-500 hover:bg-teal-600 text-white cursor-pointer"
             >
               {isPendingGeneratePayment ? (
                 <Loader2 className="animate-spin" />

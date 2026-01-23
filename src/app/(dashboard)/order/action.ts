@@ -1,14 +1,15 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { formState } from "@/types/general";
 import { Cart, OrderFormState } from "@/types/order";
-import { orderFormSchema } from "@/validations/order-validation";
+import {
+  orderFormSchema,
+  orderTakeawayFormSchema,
+} from "@/validations/order-validation";
 import { redirect } from "next/navigation";
-import { FormState } from "react-hook-form";
 import midtrans from "midtrans-client";
-import { env } from "process";
 import { environment } from "@/configs/environment";
+import { formState } from "@/types/general";
 
 export async function createOrder(
   prevState: OrderFormState,
@@ -32,7 +33,7 @@ export async function createOrder(
 
   const supabase = await createClient();
 
-  const orderId = `FAICAFE-${Date.now()}`;
+  const orderId = `WPUCAFE-${Date.now()}`;
 
   const [orderResult, tableResult] = await Promise.all([
     supabase.from("orders").insert({
@@ -73,8 +74,51 @@ export async function createOrder(
   };
 }
 
-export async function updateReservation(
+export async function createOrderTakeaway(
   prevState: OrderFormState,
+  formData: FormData,
+) {
+  const validatedFields = orderTakeawayFormSchema.safeParse({
+    customer_name: formData.get("customer_name"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      status: "error",
+      errors: {
+        ...validatedFields.error.flatten().fieldErrors,
+        _form: [],
+      },
+    };
+  }
+
+  const supabase = await createClient();
+
+  const orderId = `WPUCAFE-${Date.now()}`;
+
+  const { error } = await supabase.from("orders").insert({
+    order_id: orderId,
+    customer_name: validatedFields.data.customer_name,
+    status: "process",
+  });
+
+  if (error) {
+    return {
+      status: "error",
+      errors: {
+        ...prevState.errors,
+        _form: [error.message],
+      },
+    };
+  }
+
+  return {
+    status: "success",
+  };
+}
+
+export async function updateReservation(
+  prevState: formState,
   formData: FormData,
 ) {
   const supabase = await createClient();
@@ -141,7 +185,7 @@ export async function addOrderItem(
   redirect(`/order/${data.order_id}`);
 }
 
-export async function updateStatusOrderItem(
+export async function updateStatusOrderitem(
   prevState: formState,
   formData: FormData,
 ) {
@@ -182,7 +226,6 @@ export async function generatePayment(
     isProduction: false,
     serverKey: environment.MIDTRANS_SERVER_KEY!,
   });
-
   const parameter = {
     transaction_details: {
       order_id: `${orderId}`,
@@ -208,12 +251,10 @@ export async function generatePayment(
     };
   }
 
-  const { error } = await supabase
+  await supabase
     .from("orders")
     .update({ payment_token: result.token })
     .eq("order_id", orderId);
-
-  if (error) console.error(error);
 
   return {
     status: "success",

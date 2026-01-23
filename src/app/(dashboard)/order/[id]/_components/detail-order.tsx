@@ -2,23 +2,14 @@
 
 import DataTable from "@/components/common/data-table";
 import { Button } from "@/components/ui/button";
-import {
-  HEADER_TABLE_DETAIL_ORDER,
-  INITIAL_ORDER_STATE,
-} from "@/constants/order-constant";
+import { HEADER_TABLE_DETAIL_ORDER } from "@/constants/order-constant";
 import useDataTable from "@/hooks/use-data-table";
 import { createClientSupabase } from "@/lib/supabase/default";
 import { cn, convertIDR } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  startTransition,
-  useActionState,
-  useEffect,
-  useEffectEvent,
-  useMemo,
-} from "react";
+import { startTransition, useActionState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import Summary from "./summary";
 import {
@@ -28,15 +19,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EllipsisVertical } from "lucide-react";
-import { updateStatusOrderItem } from "../../action";
 import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
 import { useAuthStore } from "@/stores/auth-store";
+import Receipt from "./receipt";
+import { updateStatusOrderitem } from "../../action";
 
 export default function DetailOrder({ id }: { id: string }) {
   const supabase = createClientSupabase();
   const { currentPage, currentLimit, handleChangePage, handleChangeLimit } =
     useDataTable();
-
   const profile = useAuthStore((state) => state.profile);
 
   const { data: order } = useQuery({
@@ -44,7 +35,9 @@ export default function DetailOrder({ id }: { id: string }) {
     queryFn: async () => {
       const result = await supabase
         .from("orders")
-        .select("id, customer_name, status, payment_token, tables (name, id)")
+        .select(
+          "id, customer_name, status, payment_token, tables (name, id), created_at",
+        )
         .eq("order_id", id)
         .single();
 
@@ -96,7 +89,7 @@ export default function DetailOrder({ id }: { id: string }) {
         .order("status");
 
       if (result.error)
-        toast.error("Get Order Menu data failed", {
+        toast.error("Get order menu data failed", {
           description: result.error.message,
         });
 
@@ -106,7 +99,7 @@ export default function DetailOrder({ id }: { id: string }) {
   });
 
   const [updateStatusOrderState, updateStatusOrderAction] = useActionState(
-    updateStatusOrderItem,
+    updateStatusOrderitem,
     INITIAL_STATE_ACTION,
   );
 
@@ -130,12 +123,13 @@ export default function DetailOrder({ id }: { id: string }) {
         description: updateStatusOrderState.errors?._form?.[0],
       });
     }
+
     if (updateStatusOrderState?.status === "success") {
       toast.success("Update Status Order Success");
     }
   }, [updateStatusOrderState]);
 
-  const filterData = useMemo(() => {
+  const filteredData = useMemo(() => {
     return (orderMenu?.data || []).map((item, index) => {
       return [
         currentLimit * (currentPage - 1) + index + 1,
@@ -214,18 +208,21 @@ export default function DetailOrder({ id }: { id: string }) {
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between gap-4 w-full">
         <h1 className="text-2xl font-bold">Detail Order</h1>
-        {profile.role !== "kitchen" && (
+        {profile.role !== "kitchen" && order?.status === "process" && (
           <Link href={`/order/${id}/add`}>
-            <Button>Add Order Items</Button>
+            <Button>Add Order Item</Button>
           </Link>
         )}
+        {order?.status === "settled" && (
+          <Receipt order={order} orderMenu={orderMenu?.data} orderId={id} />
+        )}
       </div>
-      <div className="flex flex-col lg:flex-row gap-4 w-full ">
+      <div className="flex flex-col lg:flex-row gap-4 w-full">
         <div className="lg:w-2/3">
           <DataTable
             header={HEADER_TABLE_DETAIL_ORDER}
+            data={filteredData}
             isLoading={isLoadingOrderMenu}
-            data={filterData}
             totalPages={totalPages}
             currentPage={currentPage}
             currentLimit={currentLimit}
