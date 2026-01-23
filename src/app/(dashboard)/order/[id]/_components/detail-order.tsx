@@ -19,10 +19,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EllipsisVertical } from "lucide-react";
+import { updateStatusOrderitem } from "../../action";
 import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
 import { useAuthStore } from "@/stores/auth-store";
 import Receipt from "./receipt";
-import { updateStatusOrderitem } from "../../action";
 
 export default function DetailOrder({ id }: { id: string }) {
   const supabase = createClientSupabase();
@@ -148,7 +148,7 @@ export default function DetailOrder({ id }: { id: string }) {
             </span>
           </div>
         </div>,
-        <div>{convertIDR(item.menus.price * item.quantity)}</div>,
+        <div>{convertIDR(item.nominal)}</div>,
         <div
           className={cn("px-2 py-1 rounded-full text-white w-fit capitalize", {
             "bg-gray-500": item.status === "pending",

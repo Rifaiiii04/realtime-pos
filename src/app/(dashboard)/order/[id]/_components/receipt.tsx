@@ -17,7 +17,13 @@ const Receipt = ({
     created_at: string;
   };
   orderMenu:
-    | { menus: Menu; quantity: number; status: string; id: string }[]
+    | {
+        menus: Menu;
+        quantity: number;
+        status: string;
+        id: string;
+        nominal: number;
+      }[]
     | null
     | undefined;
   orderId: string;
@@ -25,7 +31,7 @@ const Receipt = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const { grandTotal, totalPrice, tax, service } = usePricing(orderMenu);
 
-  const reactToPrintFn = useReactToPrint({ contentRef, });
+  const reactToPrintFn = useReactToPrint({ contentRef });
   return (
     <div className="relative">
       <Button onClick={reactToPrintFn}>Print Receipt</Button>

@@ -10,22 +10,21 @@ import { toast } from "sonner";
 import CardMenu from "./card-menu";
 import LoadingCardMenu from "./loading-card-menu";
 import CartSection from "./cart";
-import { act, startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { Cart } from "@/types/order";
 import { Menu } from "@/validations/menu-validation";
-import { Item } from "@radix-ui/react-dropdown-menu";
 import { addOrderItem } from "../../../action";
 import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
 
 export default function AddOrderItem({ id }: { id: string }) {
   const supabase = createClient();
-
   const {
     currentSearch,
     currentFilter,
     handleChangeSearch,
     handleChangeFilter,
   } = useDataTable();
+
   const { data: menus, isLoading: isLoadingMenu } = useQuery({
     queryKey: ["menus", currentSearch, currentFilter],
     queryFn: async () => {
@@ -73,7 +72,10 @@ export default function AddOrderItem({ id }: { id: string }) {
   const [carts, setCarts] = useState<Cart[]>([]);
 
   const handleAddToCart = (menu: Menu, action: "increment" | "decrement") => {
-    const existingItem = carts.find((item) => item.menu.id === menu.id);
+    const existingItem = carts.find((item) => item.menu_id === menu.id);
+    const priceAfterDiscount =
+      menu.price - menu.price * ((menu.discount || 0) / 100);
+
     if (existingItem) {
       if (action === "decrement") {
         if (existingItem.quantity > 1) {
@@ -83,7 +85,7 @@ export default function AddOrderItem({ id }: { id: string }) {
                 ? {
                     ...item,
                     quantity: item.quantity - 1,
-                    total: item.total - menu.price,
+                    nominal: item.nominal - priceAfterDiscount,
                   }
                 : item,
             ),
@@ -98,7 +100,7 @@ export default function AddOrderItem({ id }: { id: string }) {
               ? {
                   ...item,
                   quantity: item.quantity + 1,
-                  total: item.total + menu.price,
+                  nominal: item.nominal + priceAfterDiscount,
                 }
               : item,
           ),
@@ -110,7 +112,7 @@ export default function AddOrderItem({ id }: { id: string }) {
         {
           menu_id: menu.id,
           quantity: 1,
-          total: menu.price,
+          nominal: priceAfterDiscount,
           notes: "",
           menu,
         },
@@ -138,11 +140,11 @@ export default function AddOrderItem({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 w-full">
-      <div className="space-y-4 lg:w-2/3 ">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-4 w-full">
+      <div className="space-y-4 lg:w-2/3">
+        <div className="flex flex-col items-center justify-between gap-4 w-full lg:flex-row">
           <div className="flex flex-col lg:flex-row items-center gap-4">
             <h1 className="text-2xl font-bold">Menu</h1>
-            <div className="flex gap-2 ">
+            <div className="flex gap-2">
               {FILTER_MENU.map((item) => (
                 <Button
                   key={item.value}
@@ -173,10 +175,10 @@ export default function AddOrderItem({ id }: { id: string }) {
           </div>
         )}
         {!isLoadingMenu && menus?.data?.length === 0 && (
-          <div className="text-center w-full">Menu Not Found</div>
+          <div className="text-center w-full">Menu not found</div>
         )}
       </div>
-      <div className="lg:w-1/3 ">
+      <div className="lg:w-1/3">
         <CartSection
           order={order}
           carts={carts}
