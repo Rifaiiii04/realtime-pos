@@ -7,7 +7,7 @@ import { Table } from "@/validations/table-validation";
 import { OrderForm, orderFormSchema } from "@/validations/order-validation";
 import {
   INITIAL_ORDER,
-  INITIAL_ORDER_STATE,
+  INITIAL_STATE_ORDER,
   STATUS_CREATE_ORDER,
 } from "@/constants/order-constant";
 import {
@@ -35,7 +35,7 @@ export default function DialogCreateOrder({
   });
 
   const [createOrderState, createOrderAction, isPendingCreateOrder] =
-    useActionState(createOrder, INITIAL_ORDER_STATE);
+    useActionState(createOrder, INITIAL_STATE_ORDER);
 
   const onSubmit = form.handleSubmit(async (data) => {
     const formData = new FormData();
